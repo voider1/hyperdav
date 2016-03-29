@@ -4,9 +4,11 @@ version = "0.1.0"
 authors = ["Jakob Gillich <jakob@gillich.me>"]
 
 [dependencies]
-serde = "0.7"
-serde_json = "0.7"
-serde_macros = "0.7"
-hyper = { version = "0.8.0", features = [ "serde-serialization" ] }
+serde = "0.7.0"
+serde_macros = "0.7.0"
+serde_xml = "0.6.3"
+hyper = "0.8.0"
 url = "0.5.7"
+
+[dev-dependencies]
 uuid = "0.1"

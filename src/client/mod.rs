@@ -19,45 +19,48 @@ impl Client {
     }
 
     /// Put a file
-    pub fn put<'a, U: IntoUrl>(&'a self, body: &'a mut Read, url: U) -> RequestBuilder<'a> {
+    pub fn put<'a, U: IntoUrl + Clone>(&'a self, body: &'a mut Read, url: U) -> RequestBuilder<'a> {
         self.request(Method::Put, url).body(Body::ChunkedBody(body))
     }
 
     /// Create a directory
-    pub fn create_dir<'a, U: IntoUrl>(&'a self, url: U) -> RequestBuilder<'a> {
+    pub fn create_dir<'a, U: IntoUrl + Clone>(&'a self, url: U) -> RequestBuilder<'a> {
         self.request(Method::Extension("MKCOL".to_string()), url)
     }
 
     /// Rename/move a directory or file
-    pub fn rename<'a, U: IntoUrl>(&'a self, from: U, to: U) -> RequestBuilder<'a> {
+    pub fn rename<'a, U: IntoUrl + Clone>(&'a self, from: U, to: U) -> RequestBuilder<'a> {
         let mut req = self.request(Method::Extension("MOVE".to_string()), from);
 
-        let actual_url = to.into_url().unwrap().to_string(); // FIXME :/
-
-        req = req.header(Destination(actual_url));
-
-
-        req
+        // Set destination header
+        if let Ok(url) = to.into_url() {
+            req.header(Destination(url.to_string()))
+        } else {
+            req
+        }
     }
 
-    // curl --digest --user 'user:pass' -X MKCOL http://uwiki.net/uwiki/
+    // FIXME can we somehow parse the url AND get rid of Clone?
+    pub fn request<'a, U: IntoUrl + Clone>(&'a self, method: Method, url: U) -> RequestBuilder<'a> {
+        let auth_header = match url.clone().into_url() {
+            Ok(url) => match url.relative_scheme_data() {
+                Some(scheme) => {
+                    Some(Authorization(Basic {
+                        username: scheme.username.clone(),
+                        password: scheme.password.clone(),
+                    }))
+                },
+                None => None,
+            },
+            Err(_) => None,
+        };
 
-    // FIXME this function is a mess
-    pub fn request<'a, U: IntoUrl>(&'a self, method: Method, url: U) -> RequestBuilder<'a> {
-        let actual_url = url.into_url().unwrap(); // FIXME :/
+        let mut req = self.http_client.request(method, url);
 
-        let mut req = self.http_client.request(method, actual_url.clone());
-
-        // Set auth header
-        if let Some(scheme) = actual_url.relative_scheme_data() {
-            if scheme.username != "" {
-                req = req.header(Authorization(Basic {
-                    username: scheme.username.clone(),
-                    password: scheme.password.clone(),
-                }));
-            }
+        if let Some(header) = auth_header {
+            req.header(header)
+        } else {
+            req
         }
-
-        req
     }
 }
