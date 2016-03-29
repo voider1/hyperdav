@@ -22,3 +22,21 @@ fn put() {
     let res = client.put(&mut f, random_url!()).send().unwrap();
     assert_eq!(res.status, StatusCode::Created);
 }
+
+#[test]
+fn create_dir() {
+    let client = Client::new();
+    let res = client.create_dir(random_url!()).send().unwrap();
+    assert_eq!(res.status, StatusCode::Created);
+}
+
+#[test]
+fn rename() {
+    let client = Client::new();
+    let from = random_url!();
+    let to = random_url!();
+    let mut res = client.create_dir(from.clone()).send().unwrap();
+    assert_eq!(res.status, StatusCode::Created);
+    res = client.rename(from, to).send().unwrap();
+    assert_eq!(res.status, StatusCode::Created);
+}

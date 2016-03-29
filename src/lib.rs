@@ -1,7 +1,7 @@
 #![feature(custom_derive, plugin, question_mark)]
 #![plugin(serde_macros)]
 
-extern crate hyper;
+#[macro_use] extern crate hyper;
 extern crate url;
 
 pub mod client;
