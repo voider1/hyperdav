@@ -1,0 +1,12 @@
+[package]
+name = "hyperdav"
+version = "0.1.0"
+authors = ["Jakob Gillich <jakob@gillich.me>"]
+
+[dependencies]
+serde = "0.7"
+serde_json = "0.7"
+serde_macros = "0.7"
+hyper = { version = "0.8.0", features = [ "serde-serialization" ] }
+url = "0.5.7"
+uuid = "0.1"
