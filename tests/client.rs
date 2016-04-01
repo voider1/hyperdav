@@ -40,3 +40,15 @@ fn rename() {
     res = client.rename(from, to).send().unwrap();
     assert_eq!(res.status, StatusCode::Created);
 }
+
+#[test]
+fn get() {
+    let client = Client::new();
+    let url = random_url!();
+    let mut f = std::io::empty();
+    let res = client.put(&mut f, url.clone()).send().unwrap();
+    assert_eq!(res.status, StatusCode::Created);
+    let res = client.get(url).send().unwrap();
+    assert_eq!(res.status, StatusCode::Ok);
+    // TODO test body
+}

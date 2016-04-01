@@ -18,6 +18,10 @@ impl Client {
         }
     }
 
+    pub fn get<'a, U: IntoUrl + Clone>(&'a self, url: U) -> RequestBuilder<'a> {
+        self.request(Method::Get, url)
+    }
+
     /// Put a file
     pub fn put<'a, U: IntoUrl + Clone>(&'a self, body: &'a mut Read, url: U) -> RequestBuilder<'a> {
         self.request(Method::Put, url).body(Body::ChunkedBody(body))
@@ -30,7 +34,7 @@ impl Client {
 
     /// Rename/move a directory or file
     pub fn rename<'a, U: IntoUrl + Clone>(&'a self, from: U, to: U) -> RequestBuilder<'a> {
-        let mut req = self.request(Method::Extension("MOVE".to_string()), from);
+        let req = self.request(Method::Extension("MOVE".to_string()), from);
 
         // Set destination header
         if let Ok(url) = to.into_url() {
@@ -55,7 +59,7 @@ impl Client {
             Err(_) => None,
         };
 
-        let mut req = self.http_client.request(method, url);
+        let req = self.http_client.request(method, url);
 
         if let Some(header) = auth_header {
             req.header(header)
