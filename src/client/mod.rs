@@ -18,6 +18,7 @@ impl Client {
         }
     }
 
+    /// Get a file
     pub fn get<'a, U: IntoUrl + Clone>(&'a self, url: U) -> RequestBuilder<'a> {
         self.request(Method::Get, url)
     }

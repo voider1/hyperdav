@@ -1,5 +1,4 @@
-#![feature(custom_derive, plugin, question_mark)]
-#![plugin(serde_macros)]
+#![feature(question_mark)]
 
 #[macro_use] extern crate hyper;
 extern crate url;
