@@ -47,14 +47,12 @@ impl Client {
     }
 
     /// List files in a directory
-    // BEWARE: THIS CODE IS CRAP. XML sucks, so please
     pub fn ls<'a, U: IntoUrl + Clone>(&'a self, url: U) -> Result<(), Error> {
-        let body =
-            r#" <?xml version="1.0" encoding="utf-8" ?>
-                 <D:propfind xmlns:D="DAV:">
-                    <D:allprop/>
-                 </D:propfind>
-            "#;
+        let body =r#"<?xml version="1.0" encoding="utf-8" ?>
+            <D:propfind xmlns:D="DAV:">
+                <D:allprop/>
+            </D:propfind>
+        "#;
 
         let mut res = self.request(Method::Propfind, url).body(body).send().unwrap();
 

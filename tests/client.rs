@@ -56,6 +56,7 @@ fn mv() {
 }
 
 #[test]
+#[ignore]
 fn ls() {
     let client = Client::new();
     let folder_url = random_url!();
