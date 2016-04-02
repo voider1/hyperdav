@@ -1,11 +1,12 @@
+use hyper::Error;
 use hyper::client::Client as HttpClient;
 use hyper::client::RequestBuilder;
-use hyper::method::Method;
 use hyper::client::IntoUrl;
 use hyper::client::Body;
 use std::io::Read;
 use hyper::header::{Authorization, Basic};
 use webdav::header::{Destination};
+use webdav::Method;
 
 pub struct Client {
     http_client: HttpClient,
@@ -29,13 +30,13 @@ impl Client {
     }
 
     /// Create a directory
-    pub fn create_dir<'a, U: IntoUrl + Clone>(&'a self, url: U) -> RequestBuilder<'a> {
-        self.request(Method::Extension("MKCOL".to_string()), url)
+    pub fn mkdir<'a, U: IntoUrl + Clone>(&'a self, url: U) -> RequestBuilder<'a> {
+        self.request(Method::Mkcol, url)
     }
 
     /// Rename/move a directory or file
-    pub fn rename<'a, U: IntoUrl + Clone>(&'a self, from: U, to: U) -> RequestBuilder<'a> {
-        let req = self.request(Method::Extension("MOVE".to_string()), from);
+    pub fn mv<'a, U: IntoUrl + Clone>(&'a self, from: U, to: U) -> RequestBuilder<'a> {
+        let req = self.request(Method::Move, from);
 
         // Set destination header
         if let Ok(url) = to.into_url() {
@@ -43,6 +44,25 @@ impl Client {
         } else {
             req
         }
+    }
+
+    /// List files in a directory
+    // BEWARE: THIS CODE IS CRAP. XML sucks, so please
+    pub fn ls<'a, U: IntoUrl + Clone>(&'a self, url: U) -> Result<(), Error> {
+        let body =
+            r#" <?xml version="1.0" encoding="utf-8" ?>
+                 <D:propfind xmlns:D="DAV:">
+                    <D:allprop/>
+                 </D:propfind>
+            "#;
+
+        let mut res = self.request(Method::Propfind, url).body(body).send().unwrap();
+
+        let mut response_body = String::new();
+        try!(res.read_to_string(&mut response_body));
+        panic!("{}", response_body);
+
+        Ok(())
     }
 
     // FIXME can we somehow parse the url AND get rid of Clone?
@@ -60,7 +80,7 @@ impl Client {
             Err(_) => None,
         };
 
-        let req = self.http_client.request(method, url);
+        let req = self.http_client.request(method.into(), url);
 
         if let Some(header) = auth_header {
             req.header(header)
