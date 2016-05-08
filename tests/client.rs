@@ -59,7 +59,14 @@ fn mv() {
 fn ls() {
     let client = Client::new();
     let folder_url = random_url!();
-    let res = client.mkdir(folder_url).send().unwrap();
+    let res = client.mkdir(folder_url.clone()).send().unwrap();
     assert_eq!(res.status, StatusCode::Created);
     let res = client.ls(OWNCLOUD_URL).unwrap();
+    let mut found = false;
+    for item in res {
+        if item.href.unwrap() == format!("{}/", folder_url.path()) {
+            found = true;
+        }
+    }
+    assert!(found);
 }

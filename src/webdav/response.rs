@@ -2,8 +2,9 @@ use std::io::Read;
 use xml::reader::{EventReader, XmlEvent, Error as XmlError};
 use std;
 use std::error::Error;
+use xml::ParserConfig;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct PropfindResponse {
     pub href: Option<String>,
 }
@@ -55,6 +56,7 @@ impl Error for PropfindParseError {
 pub fn parse_propfind_response<R: Read>(read: R) -> Result<Vec<PropfindResponse>, PropfindParseError> {
     enum Field {
         Href,
+        Ignored,
     }
 
     enum State {
@@ -67,7 +69,12 @@ pub fn parse_propfind_response<R: Read>(read: R) -> Result<Vec<PropfindResponse>
         End,
     }
 
-    let parser = EventReader::new(read);
+    let parser = EventReader::new_with_config(read,
+                                              ParserConfig {
+                                                  trim_whitespace: true,
+                                                  cdata_to_characters: true,
+                                                  ..Default::default()
+                                              });
     let mut items = Vec::new();
     let mut state = State::Start;
 
@@ -92,13 +99,13 @@ pub fn parse_propfind_response<R: Read>(read: R) -> Result<Vec<PropfindResponse>
             State::Items => {
                 match e {
                     XmlEvent::EndElement { .. } => State::End,
-                    XmlEvent::StartElement { ref name, .. } if &*name.local_name == "response" => {
+                    XmlEvent::StartElement { ref name, .. } if name.local_name == "response" => {
                         State::Item {
                             item: PropfindResponse::default(),
                             field: None,
                         }
                     }
-                    _ => return Err(PropfindParseError::UnknownDocument),
+                    _ => return Err(PropfindParseError::UnknownElement),
                 }
             }
             State::Item { field: None, item } => {
@@ -113,15 +120,26 @@ pub fn parse_propfind_response<R: Read>(read: R) -> Result<Vec<PropfindResponse>
                             }
                             _ => {
                                 State::Item {
-                                    field: None,
+                                    field: Some(Field::Ignored),
                                     item: item,
                                 }
                             }
                         }
                     }
-                    XmlEvent::EndElement { .. } => {
-                        items.push(item);
-                        State::Items
+                    XmlEvent::EndElement { name } => {
+                        match &*name.local_name {
+                            "response" => {
+                                items.push(item);
+                                State::Items
+                            }
+                            // ignore nested elements for now
+                            _ => {
+                                State::Item {
+                                    field: None,
+                                    item: item,
+                                }
+                            }
+                        }
                     }
                     _ => {
                         State::Item {
@@ -136,6 +154,7 @@ pub fn parse_propfind_response<R: Read>(read: R) -> Result<Vec<PropfindResponse>
                     XmlEvent::Characters(s) => {
                         match field {
                             Field::Href => item.href = Some(s),
+                            Field::Ignored => {}
                         };
                         State::Item {
                             field: Some(field),
@@ -145,6 +164,13 @@ pub fn parse_propfind_response<R: Read>(read: R) -> Result<Vec<PropfindResponse>
                     XmlEvent::EndElement { .. } => {
                         State::Item {
                             field: None,
+                            item: item,
+                        }
+                    }
+                    // ignore nested element for now
+                    XmlEvent::StartElement { .. } => {
+                        State::Item {
+                            field: Some(field),
                             item: item,
                         }
                     }

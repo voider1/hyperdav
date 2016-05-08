@@ -66,11 +66,11 @@ impl Client {
     pub fn request<'a, U: IntoUrl + Clone>(&'a self, method: Method, url: U) -> RequestBuilder<'a> {
         let auth_header = match url.clone().into_url() {
             Ok(url) => {
-                match url.relative_scheme_data() {
-                    Some(scheme) => {
+                match url.password() {
+                    Some(password) => {
                         Some(Authorization(Basic {
-                            username: scheme.username.clone(),
-                            password: scheme.password.clone(),
+                            username: url.username().into(),
+                            password: Some(password.into()),
                         }))
                     }
                     None => None,
