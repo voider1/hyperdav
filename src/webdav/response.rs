@@ -52,7 +52,7 @@ impl Error for PropfindParseError {
     }
 }
 
-pub fn parse_propfind<R: Read>(read: R) -> Result<Vec<PropfindResponse>, PropfindParseError> {
+pub fn parse_propfind_response<R: Read>(read: R) -> Result<Vec<PropfindResponse>, PropfindParseError> {
     enum Field {
         Href,
     }

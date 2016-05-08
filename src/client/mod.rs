@@ -1,4 +1,3 @@
-use hyper::Error;
 use hyper::client::Client as HttpClient;
 use hyper::client::RequestBuilder;
 use hyper::client::IntoUrl;
@@ -7,6 +6,8 @@ use std::io::Read;
 use hyper::header::{Authorization, Basic};
 use webdav::header::{Destination, Depth};
 use webdav::Method;
+use webdav::response::{parse_propfind_response, PropfindResponse};
+use Error;
 
 pub struct Client {
     http_client: HttpClient,
@@ -45,25 +46,21 @@ impl Client {
     }
 
     /// List files in a directory
-    pub fn ls<'a, U: IntoUrl + Clone>(&'a self, url: U) -> Result<(), Error> {
+    pub fn ls<'a, U: IntoUrl + Clone>(&'a self, url: U) -> Result<Vec<PropfindResponse>, Error> {
         let body = r#"<?xml version="1.0" encoding="utf-8" ?>
             <D:propfind xmlns:D="DAV:">
                 <D:allprop/>
             </D:propfind>
         "#;
 
-        let mut res = self.request(Method::Propfind, url)
-                          .header(Depth("Infinity".into()))
-                          .body(body)
-                          .send()
-                          .unwrap();
+        let res = try!(self.request(Method::Propfind, url)
+                           .header(Depth("Infinity".into()))
+                           .body(body)
+                           .send());
 
-        let mut response_body = String::new();
-        try!(res.read_to_string(&mut response_body));
-
-
-        Ok(())
+        Ok(try!(parse_propfind_response(res)))
     }
+
 
     // FIXME can we somehow parse the url AND get rid of Clone?
     pub fn request<'a, U: IntoUrl + Clone>(&'a self, method: Method, url: U) -> RequestBuilder<'a> {
