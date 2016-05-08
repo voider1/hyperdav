@@ -43,7 +43,7 @@ impl FromStr for Method {
             "MKCOL" => Ok(Method::Mkcol),
             "MOVE" => Ok(Method::Move),
             "PROPFIND" => Ok(Method::Propfind),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }

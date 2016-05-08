@@ -5,7 +5,7 @@ use hyper::client::IntoUrl;
 use hyper::client::Body;
 use std::io::Read;
 use hyper::header::{Authorization, Basic};
-use webdav::header::{Destination};
+use webdav::header::{Destination, Depth};
 use webdav::Method;
 
 pub struct Client {
@@ -14,9 +14,7 @@ pub struct Client {
 
 impl Client {
     pub fn new() -> Self {
-        Client {
-            http_client: HttpClient::new(),
-        }
+        Client { http_client: HttpClient::new() }
     }
 
     /// Get a file
@@ -48,17 +46,21 @@ impl Client {
 
     /// List files in a directory
     pub fn ls<'a, U: IntoUrl + Clone>(&'a self, url: U) -> Result<(), Error> {
-        let body =r#"<?xml version="1.0" encoding="utf-8" ?>
+        let body = r#"<?xml version="1.0" encoding="utf-8" ?>
             <D:propfind xmlns:D="DAV:">
                 <D:allprop/>
             </D:propfind>
         "#;
 
-        let mut res = self.request(Method::Propfind, url).body(body).send().unwrap();
+        let mut res = self.request(Method::Propfind, url)
+                          .header(Depth("Infinity".into()))
+                          .body(body)
+                          .send()
+                          .unwrap();
 
         let mut response_body = String::new();
         try!(res.read_to_string(&mut response_body));
-        panic!("{}", response_body);
+
 
         Ok(())
     }
@@ -66,15 +68,17 @@ impl Client {
     // FIXME can we somehow parse the url AND get rid of Clone?
     pub fn request<'a, U: IntoUrl + Clone>(&'a self, method: Method, url: U) -> RequestBuilder<'a> {
         let auth_header = match url.clone().into_url() {
-            Ok(url) => match url.relative_scheme_data() {
-                Some(scheme) => {
-                    Some(Authorization(Basic {
-                        username: scheme.username.clone(),
-                        password: scheme.password.clone(),
-                    }))
-                },
-                None => None,
-            },
+            Ok(url) => {
+                match url.relative_scheme_data() {
+                    Some(scheme) => {
+                        Some(Authorization(Basic {
+                            username: scheme.username.clone(),
+                            password: scheme.password.clone(),
+                        }))
+                    }
+                    None => None,
+                }
+            }
             Err(_) => None,
         };
 

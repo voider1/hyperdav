@@ -5,6 +5,7 @@ use std::ascii::AsciiExt;
 
 pub mod header;
 pub mod method;
+pub mod response;
 
 pub use self::method::Method;
 
@@ -37,7 +38,7 @@ impl FromStr for Depth {
             "0" => Ok(Depth::Zero),
             "1" => Ok(Depth::One),
             "INFINITY" => Ok(Depth::Infinity),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }

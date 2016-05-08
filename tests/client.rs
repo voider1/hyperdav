@@ -56,11 +56,10 @@ fn mv() {
 }
 
 #[test]
-#[ignore]
 fn ls() {
     let client = Client::new();
     let folder_url = random_url!();
     let res = client.mkdir(folder_url).send().unwrap();
     assert_eq!(res.status, StatusCode::Created);
-    let res = client.ls(OWNCLOUD_URL);
+    let res = client.ls(OWNCLOUD_URL).unwrap();
 }
