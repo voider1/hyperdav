@@ -20,7 +20,7 @@ pub enum PropfindParseError {
 
 impl From<XmlError> for PropfindParseError {
     fn from(e: XmlError) -> Self {
-        Error::Xml(e)
+        PropfindParseError::Xml(e)
     }
 }
 
@@ -32,19 +32,19 @@ impl std::fmt::Display for PropfindParseError {
 
 impl Error for PropfindParseError {
     fn description(&self) -> &str {
-        use PropfindParseError::*;
+        use self::PropfindParseError::*;
         match *self {
             UnknownDocument => "not a propfind response",
             InvalidFieldValue => "field must only contain text",
             UnknownElement => "document must only contain responses",
-            UnkownField => "unsupported field",
+            UnknownField => "unsupported field",
             ExpectedEndOfDocument => "expected end of document",
             Xml(ref e) => e.description(),
         }
     }
 
     fn cause(&self) -> Option<&Error> {
-        use PropfindParseError::*;
+        use self::PropfindParseError::*;
         match *self {
             Xml(ref e) => Some(e as &Error),
             _ => None,
@@ -68,7 +68,7 @@ pub fn parse_propfind<R: Read>(read: R) -> Result<Vec<PropfindResponse>, Propfin
     }
 
     let parser = EventReader::new(read);
-    let items = Vec::new();
+    let mut items = Vec::new();
     let mut state = State::Start;
 
     for e in parser {
@@ -153,4 +153,6 @@ pub fn parse_propfind<R: Read>(read: R) -> Result<Vec<PropfindResponse>, Propfin
             }
         }
     }
+
+    Ok(items)
 }
