@@ -1,3 +1,14 @@
 language: rust
 rust:
   - nightly
+after_success: |
+  export PATH=$HOME/.local/bin:$PATH &&
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  cargo doc && 
+  pip install ghp-import --user `whoami` &&
+  ghp-import -n target/doc &&
+  git push -fq https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+env:
+  global:
+    - secure: "DlivNM4ev6wfPs7nTCzqRRke6WhkbFOlulo50Q1I1So/GCIEbxUK2Dw5WGPxEFXElOaNGiPMUEsQg36L4faqlolLvDRi70S2IQIrtrJiW6l9A8qrKofZzI5+pE25dxpyb//TpohN7qt6KtOkE7xDjoy54HyBvc8jZJkZ/ycyM6+MFgJF/nLVcz7hq1nUh7TGy5gAB2k0GiMejfje2rFxEnveVtxAduaOPxWlxrGZbsVCDsOZSZ8nzzZ3ilNaENsUp5DST6z7xy6Br5V9Gl2Z2k6GE2gBDRDzzcrZVF4RPV8R0VLDcE08H2sBLfWllqz4sNiSW0VBVTXTEMi52g/5hdbovWgKTa9upo27EI9GIb/A0fosu42ACkEPCSfyeKc9D3r1XCdzFq8WeheML2mtLl/cc1bT18fH3q6L78NfNLxevWEG8xgoHVM6oXL4V+OKXc6QMDRoEB5SjO2TSiFbN81v9fp4WMYlOc28/LNQJaInI6zJGTWD2Z31RKRPja7nZd3mgN78xjQHNAJIOdoSbdt6AfVx1maedlZufQdoP2V43m9RV0ORN5N4KxE8ryFtRpfKLuCnXeRE+VBHYYWAp0W3rRlMYbyEzGPrzrwu7jMA/W2LKQmB1lc1XOf7SM62m272HpQ9pS5nHlBde9cqtIbKnnjDnsUpKSXpu44wM8I="
