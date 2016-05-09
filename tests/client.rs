@@ -4,7 +4,7 @@ extern crate url;
 extern crate uuid;
 
 use hyper::status::StatusCode;
-use hyperdav::Client;
+use hyperdav::webdav::Client;
 use url::Url;
 
 const OWNCLOUD_URL: &'static str = "https://test:test@demo.owncloud.org/remote.php/webdav/";

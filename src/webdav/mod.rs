@@ -6,7 +6,9 @@ use std::ascii::AsciiExt;
 pub mod header;
 pub mod method;
 pub mod response;
+pub mod client;
 
+pub use self::client::Client;
 pub use self::method::Method;
 
 pub enum Depth {

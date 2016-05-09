@@ -4,9 +4,9 @@ use hyper::client::IntoUrl;
 use hyper::client::Body;
 use std::io::Read;
 use hyper::header::{Authorization, Basic};
-use webdav::header::{Destination, Depth};
-use webdav::Method;
-use webdav::response::{parse_propfind_response, PropfindResponse};
+use super::header::{Destination, Depth};
+use super::Method;
+use super::response::{parse_propfind_response, PropfindResponse};
 use Error;
 
 pub struct Client {
