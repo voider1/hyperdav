@@ -3,7 +3,6 @@ extern crate hyperdav;
 extern crate url;
 extern crate uuid;
 
-use hyper::status::StatusCode;
 use hyperdav::webdav::Client;
 use url::Url;
 
@@ -22,26 +21,21 @@ fn get() {
     let client = Client::new();
     let url = random_url!();
     let mut f = std::io::empty();
-    let res = client.put(&mut f, url.clone()).send().unwrap();
-    assert_eq!(res.status, StatusCode::Created);
-    let res = client.get(url).send().unwrap();
-    assert_eq!(res.status, StatusCode::Ok);
-    // TODO test body
+    client.put(&mut f, url.clone()).unwrap();
+    client.get(url).unwrap();
 }
 
 #[test]
 fn put() {
     let client = Client::new();
     let mut f = std::io::empty();
-    let res = client.put(&mut f, random_url!()).send().unwrap();
-    assert_eq!(res.status, StatusCode::Created);
+    client.put(&mut f, random_url!()).unwrap();
 }
 
 #[test]
 fn mkdir() {
     let client = Client::new();
-    let res = client.mkdir(random_url!()).send().unwrap();
-    assert_eq!(res.status, StatusCode::Created);
+    client.mkdir(random_url!()).unwrap();
 }
 
 #[test]
@@ -49,18 +43,15 @@ fn mv() {
     let client = Client::new();
     let from = random_url!();
     let to = random_url!();
-    let res = client.mkdir(from.clone()).send().unwrap();
-    assert_eq!(res.status, StatusCode::Created);
-    let res = client.mv(from, to).send().unwrap();
-    assert_eq!(res.status, StatusCode::Created);
+    client.mkdir(from.clone()).unwrap();
+    client.mv(from, to).unwrap();
 }
 
 #[test]
 fn ls() {
     let client = Client::new();
     let folder_url = random_url!();
-    let res = client.mkdir(folder_url.clone()).send().unwrap();
-    assert_eq!(res.status, StatusCode::Created);
+    client.mkdir(folder_url.clone()).unwrap();
     let res = client.ls(OWNCLOUD_URL).unwrap();
     let mut found = false;
     for item in res {

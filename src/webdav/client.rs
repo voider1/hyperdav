@@ -1,5 +1,6 @@
 use hyper::client::Client as HttpClient;
 use hyper::client::RequestBuilder;
+use hyper::client::response::Response;
 use hyper::client::IntoUrl;
 use hyper::client::Body;
 use std::io::Read;
@@ -19,30 +20,55 @@ impl Client {
     }
 
     /// Get a file
-    pub fn get<'a, U: IntoUrl + Clone>(&'a self, url: U) -> RequestBuilder<'a> {
-        self.request(Method::Get, url)
+    pub fn get<'a, U: IntoUrl + Clone>(&'a self, url: U) -> Result<Response, Error> {
+        let res = try!(self.request(Method::Get, url).send());
+
+        if !res.status.is_success() {
+            return Err(Error::ErrorResponse(res));
+        }
+
+        Ok(res)
     }
 
     /// Put a file
-    pub fn put<'a, U: IntoUrl + Clone>(&'a self, body: &'a mut Read, url: U) -> RequestBuilder<'a> {
-        self.request(Method::Put, url).body(Body::ChunkedBody(body))
+    pub fn put<'a, U: IntoUrl + Clone>(&'a self, body: &'a mut Read, url: U) -> Result<(), Error> {
+        let res = try!(self.request(Method::Put, url).body(Body::ChunkedBody(body)).send());
+
+        if !res.status.is_success() {
+            return Err(Error::ErrorResponse(res));
+        }
+
+        Ok(())
     }
 
     /// Create a directory
-    pub fn mkdir<'a, U: IntoUrl + Clone>(&'a self, url: U) -> RequestBuilder<'a> {
-        self.request(Method::Mkcol, url)
+    pub fn mkdir<'a, U: IntoUrl + Clone>(&'a self, url: U) -> Result<(), Error> {
+        let res = try!(self.request(Method::Mkcol, url).send());
+
+        if !res.status.is_success() {
+            return Err(Error::ErrorResponse(res));
+        }
+
+        Ok(())
     }
 
     /// Rename/move a directory or file
-    pub fn mv<'a, U: IntoUrl + Clone>(&'a self, from: U, to: U) -> RequestBuilder<'a> {
+    pub fn mv<'a, U: IntoUrl + Clone>(&'a self, from: U, to: U) -> Result<(), Error> {
         let req = self.request(Method::Move, from);
 
         // Set destination header
-        if let Ok(url) = to.into_url() {
+        let req = if let Ok(url) = to.into_url() {
             req.header(Destination(url.to_string()))
         } else {
             req
+        };
+
+        let res = try!(req.send());
+
+        if !res.status.is_success() {
+            return Err(Error::ErrorResponse(res));
         }
+        Ok(())
     }
 
     /// List files in a directory
@@ -57,6 +83,10 @@ impl Client {
                            .header(Depth("Infinity".into()))
                            .body(body)
                            .send());
+
+        if !res.status.is_success() {
+            return Err(Error::ErrorResponse(res));
+        }
 
         Ok(try!(parse_propfind_response(res)))
     }
