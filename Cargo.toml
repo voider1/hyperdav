@@ -2,7 +2,7 @@
 name = "hyperdav"
 description = "WebDAV client"
 repository = "https://github.com/jgillich/hyperdav"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Jakob Gillich <jakob@gillich.me>"]
 license = "MIT"
 documentation = "http://jgillich.github.io/hyperdav/hyperdav/webdav/index.html"
