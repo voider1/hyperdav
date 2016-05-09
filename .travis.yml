@@ -1,5 +1,6 @@
 language: rust
 rust:
+  - stable
   - nightly
 after_success: |
   export PATH=$HOME/.local/bin:$PATH &&
