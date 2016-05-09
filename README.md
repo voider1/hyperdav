@@ -1,6 +1,6 @@
 # hyperdav
 
-One day, this might turn into a usable WebDAV implementation in Rust.
+A somewhat usable WebDAV client for Rust.
 
 [![Travis](https://img.shields.io/travis/jgillich/hyperdav.svg?style=flat-square)](https://travis-ci.org/jgillich/hyperdav)
 
