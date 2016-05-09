@@ -6,7 +6,7 @@ use xml::ParserConfig;
 
 #[derive(Default, Debug)]
 pub struct PropfindResponse {
-    pub href: Option<String>,
+    pub href: String,
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -153,7 +153,7 @@ pub fn parse_propfind_response<R: Read>(read: R) -> Result<Vec<PropfindResponse>
                 match e {
                     XmlEvent::Characters(s) => {
                         match field {
-                            Field::Href => item.href = Some(s),
+                            Field::Href => item.href = s,
                             Field::Ignored => {}
                         };
                         State::Item {

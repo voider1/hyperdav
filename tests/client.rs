@@ -55,7 +55,7 @@ fn ls() {
     let res = client.ls(OWNCLOUD_URL).unwrap();
     let mut found = false;
     for item in res {
-        if item.href.unwrap() == format!("{}/", folder_url.path()) {
+        if item.href == format!("{}/", folder_url.path()) {
             found = true;
         }
     }
