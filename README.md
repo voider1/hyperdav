@@ -2,6 +2,8 @@
 
 A somewhat usable WebDAV client for Rust.
 
+[Documentation](http://jgillich.github.io/hyperdav/hyperdav/webdav/index.html)
+
 [![Travis](https://img.shields.io/travis/jgillich/hyperdav.svg?style=flat-square)](https://travis-ci.org/jgillich/hyperdav)
 
 RFC 4918: https://tools.ietf.org/html/rfc4918
