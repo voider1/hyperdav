@@ -1,12 +1,11 @@
+use std::convert::AsRef;
 use std::fmt;
 use std::str::FromStr;
-use std::convert::AsRef;
-use std::ascii::AsciiExt;
 
+pub mod client;
 pub mod header;
 pub mod method;
 pub mod response;
-pub mod client;
 
 pub use self::client::Client;
 pub use self::method::Method;
