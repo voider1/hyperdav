@@ -16,6 +16,6 @@ pub enum Error {
     #[fail(display = "Failed to propfind: {}", _0)]
     PropfindParse(PropfindParseError),
     /// Used when the request failes.
-    #[fail(display = "Request failed, response: {}", _0)]
+    #[fail(display = "Request failed, error code: {}", _0)]
     FailedRequest(StatusCode),
 }

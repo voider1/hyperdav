@@ -1,7 +1,8 @@
 use std::borrow::Cow;
 use std::io::Read;
+use std::path::Path;
 
-use reqwest::{header, Body, Client as HttpClient, IntoUrl, Method, RequestBuilder, Response};
+use reqwest::{header, Body, Client as HttpClient, Method, RequestBuilder, Response};
 
 use super::error::Result;
 use super::header::{Depth, Destination};
@@ -11,6 +12,7 @@ use Error;
 /// The WebDAV client. Make a client for each server.
 pub struct Client {
     http_client: HttpClient,
+    webdav_url: Cow<'static, str>,
     credentials: Option<Credentials>,
 }
 
@@ -39,7 +41,10 @@ impl ClientBuilder {
     }
 
     /// Build the WebDAV `Client`.
-    pub fn build(self) -> Client {
+    pub fn build<S>(self, webdav_url: S) -> Client
+    where
+        S: Into<Cow<'static, str>>,
+    {
         let ClientBuilder { username, password } = self;
         let http_client = HttpClient::new();
         let credentials = if let (Some(u), Some(p)) = (username, password) {
@@ -53,6 +58,7 @@ impl ClientBuilder {
 
         Client {
             http_client,
+            webdav_url: webdav_url.into(),
             credentials,
         }
     }
@@ -60,11 +66,8 @@ impl ClientBuilder {
 
 impl Client {
     /// Get a file from the WebDAV server.
-    pub fn get<U>(&self, url: U) -> Result<Response>
-    where
-        U: IntoUrl + Clone,
-    {
-        let res = self.request(Method::Get, url).send()?;
+    pub fn get(&self, path: impl AsRef<Path>) -> Result<Response> {
+        let res = self.request(Method::Get, path).send()?;
 
         if !res.status().is_success() {
             Err(Error::FailedRequest(res.status()))?;
@@ -73,17 +76,14 @@ impl Client {
         Ok(res)
     }
 
-    ///// Put a file on the WebDAV server, make sure the URL is pointing to the location where you
+    /// Put a file on the WebDAV server, make sure the URL is pointing to the location where you
     /// want the file to be.
-    pub fn put<R, U>(&self, body: R, url: U) -> Result<()>
+    pub fn put<R>(&self, body: R, path: impl AsRef<Path>) -> Result<()>
     where
-        U: IntoUrl + Clone,
         R: Read + Send + 'static,
     {
-        let mut req = self.request(Method::Put, url);
-        req.body(Body::new(body));
-        println!("{:#?}", req);
-        let res = req.send()?;
+        let mut req = self.request(Method::Put, path);
+        req.body(Body::new(body)).send()?;
 
         if !res.status().is_success() {
             Err(Error::FailedRequest(res.status()))?;
@@ -93,11 +93,8 @@ impl Client {
     }
 
     /// Create a directory on the WebDAV server.
-    pub fn mkcol<U>(&self, url: U) -> Result<()>
-    where
-        U: IntoUrl + Clone,
-    {
-        let res = self.request(Method::Extension("Mkcol".to_string()), url)
+    pub fn mkcol(&self, path: impl AsRef<Path>) -> Result<()> {
+        let res = self.request(Method::Extension("Mkcol".to_string()), path)
             .send()?;
 
         if !res.status().is_success() {
@@ -108,18 +105,17 @@ impl Client {
     }
 
     /// Rename/move a directory or file on the WebDAV server.
-    pub fn mv<U>(&self, from: U, to: U) -> Result<()>
+    pub fn mv<P>(&self, from: P, to: P) -> Result<()>
     where
-        U: IntoUrl + Clone,
+        P: AsRef<Path>,
     {
         let mut req = self.request(Method::Extension("Move".to_string()), from);
 
         // Set destination header
-        let req = if let Ok(url) = to.into_url() {
-            req.header(Destination(url.to_string()))
-        } else {
-            &mut req
-        };
+        let to = to.as_ref().to_str().unwrap();
+        let url = [self.webdav_url.as_ref(), &to].join("/");
+
+        req.header(Destination(url.to_string()));
 
         let res = req.send()?;
 
@@ -130,23 +126,17 @@ impl Client {
     }
 
     /// List files in a directory on the WebDAV server.
-    pub fn list<U>(&self, url: U) -> Result<Vec<PropfindResponse>>
-    where
-        U: IntoUrl + Clone,
-    {
+    pub fn list(&self, path: impl AsRef<Path>) -> Result<Vec<PropfindResponse>> {
         let body = r#"<?xml version="1.0" encoding="utf-8" ?>
             <D:propfind xmlns:D="DAV:">
                 <D:allprop/>
             </D:propfind>
         "#;
 
-        let res = self.request(Method::Extension("Propfind".to_string()), url)
+        let res = self.request(Method::Extension("Propfind".to_string()), path)
             .header(Depth("Infinity".into()))
             .body(body)
-            .send();
-
-        println!("{:#?}", res);
-        let res = res?;
+            .send()?;
 
         if !res.status().is_success() {
             Err(Error::FailedRequest(res.status()))?;
@@ -156,11 +146,10 @@ impl Client {
     }
 
     /// Prepare a request for use.
-    pub fn request<U>(&self, method: Method, url: U) -> RequestBuilder
-    where
-        U: IntoUrl + Clone,
-    {
-        let mut request = self.http_client.request(method, url);
+    pub fn request(&self, method: Method, path: impl AsRef<Path>) -> RequestBuilder {
+        let path = path.as_ref().to_str().unwrap();
+        let url = [self.webdav_url.as_ref(), &path].join("/");
+        let mut request = self.http_client.request(method, &url);
 
         if let Some(Credentials {
             ref username,
