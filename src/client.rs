@@ -82,8 +82,9 @@ impl Client {
     where
         R: Read + Send + 'static,
     {
-        let mut req = self.request(Method::Put, path);
-        req.body(Body::new(body)).send()?;
+        let res = self.request(Method::Put, path)
+            .body(Body::new(body))
+            .send()?;
 
         if !res.status().is_success() {
             Err(Error::FailedRequest(res.status()))?;
