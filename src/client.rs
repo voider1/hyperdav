@@ -9,14 +9,14 @@ use super::header::{Depth, Destination};
 use super::response::{parse_propfind_response, PropfindResponse};
 use Error;
 
-/// The WebDAV client. Make a client for each server.
+/// The WebDAV client. Make a `Client` for each server.
 pub struct Client {
     http_client: HttpClient,
     webdav_url: Cow<'static, str>,
     credentials: Option<Credentials>,
 }
 
-/// The credentials for the WebDAV server.
+/// The credentials for authenticating with the WebDAV server.
 pub struct Credentials {
     username: Cow<'static, str>,
     password: Cow<'static, str>,
@@ -66,6 +66,10 @@ impl ClientBuilder {
 
 impl Client {
     /// Get a file from the WebDAV server.
+    ///
+    /// # Errors
+    ///
+    /// This method fails if the passed path doesn't exist on the WebDAV server.
     pub fn get(&self, path: impl AsRef<Path>) -> Result<Response> {
         let res = self.request(Method::Get, path).send()?;
 
@@ -78,6 +82,10 @@ impl Client {
 
     /// Put a file on the WebDAV server, make sure the URL is pointing to the location where you
     /// want the file to be.
+    ///
+    /// # Errors
+    ///
+    /// This method fails if the passed path doesn't exist on the WebDAV server.
     pub fn put<R>(&self, body: R, path: impl AsRef<Path>) -> Result<()>
     where
         R: Read + Send + 'static,
@@ -105,7 +113,11 @@ impl Client {
         Ok(())
     }
 
-    /// Rename/move a directory or file on the WebDAV server.
+    /// Rename or move a directory or file on the WebDAV server.
+    ///
+    /// # Errors
+    ///
+    /// This method fails if from doesn't exist, also fails if the to path is invalid.
     pub fn mv<P>(&self, from: P, to: P) -> Result<()>
     where
         P: AsRef<Path>,
@@ -127,6 +139,10 @@ impl Client {
     }
 
     /// List files in a directory on the WebDAV server.
+    ///
+    /// # Errors
+    ///
+    /// This method fails if the passed path doesn't exist on the WebDAV server.
     pub fn list(&self, path: impl AsRef<Path>) -> Result<Vec<PropfindResponse>> {
         let body = r#"<?xml version="1.0" encoding="utf-8" ?>
             <D:propfind xmlns:D="DAV:">
@@ -146,7 +162,7 @@ impl Client {
         Ok(parse_propfind_response(res)?)
     }
 
-    /// Prepare a request for use.
+    /// Prepare a `RequestBuilder` for use in a WebDAV request.
     pub fn request(&self, method: Method, path: impl AsRef<Path>) -> RequestBuilder {
         let path = path.as_ref().to_str().unwrap();
         let url = [self.webdav_url.as_ref(), &path].join("/");

@@ -11,8 +11,7 @@ extern crate reqwest;
 extern crate xml;
 
 mod client;
-/// Contains our Error type.
-pub mod error;
+mod error;
 mod header;
 mod response;
 
