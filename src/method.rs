@@ -1,6 +1,6 @@
-use std::str::FromStr;
-use std::convert::AsRef;
 use hyper::method::Method as HyperMethod;
+use std::convert::AsRef;
+use std::str::FromStr;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum Method {
@@ -32,7 +32,6 @@ impl AsRef<str> for Method {
         }
     }
 }
-
 
 impl FromStr for Method {
     type Err = ();
