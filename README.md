@@ -1,11 +1,16 @@
-# hyperdav
-
-A somewhat usable WebDAV client for Rust.
-
-[Documentation](http://jgillich.github.io/hyperdav/hyperdav/webdav/index.html)
-
+#  hyperdav
+A basic, simple to use WebDAV client library.
 [![Travis](https://img.shields.io/travis/jgillich/hyperdav.svg?style=flat-square)](https://travis-ci.org/jgillich/hyperdav)
 
-RFC 4918: https://tools.ietf.org/html/rfc4918
+# Example
+Here is how you would put a file on the server.
 
-Methods: https://msdn.microsoft.com/en-us/library/aa142917%28v=exchg.65%29.aspx
+```rust
+extern crate hyperdav;
+
+use hyperdav::ClientBuilder;
+
+fn main() {
+
+}
+```

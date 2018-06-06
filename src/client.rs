@@ -103,7 +103,7 @@ impl Client {
 
     /// Create a directory on the WebDAV server.
     pub fn mkcol(&self, path: impl AsRef<Path>) -> Result<()> {
-        let res = self.request(Method::Extension("Mkcol".to_string()), path)
+        let res = self.request(Method::Extension("MKCOL".to_string()), path)
             .send()?;
 
         if !res.status().is_success() {

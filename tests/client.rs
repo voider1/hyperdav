@@ -3,22 +3,26 @@ extern crate hyperdav;
 extern crate url;
 extern crate uuid;
 
-use hyperdav::webdav::Client;
+use hyperdav::ClientBuilder;
 use url::Url;
 
 const OWNCLOUD_URL: &'static str = "https://test:test@demo.owncloud.org/remote.php/webdav/";
 
 macro_rules! url {
-    ($e:expr) => (Url::parse(&format!("{}{}", OWNCLOUD_URL, $e)).unwrap());
+    ($e:expr) => {
+        Url::parse(&format!("{}{}", OWNCLOUD_URL, $e)).unwrap()
+    };
 }
 
 macro_rules! random_url {
-    () => (url!(uuid::Uuid::new_v4()));
+    () => {
+        url!(uuid::Uuid::new_v4())
+    };
 }
 
 #[test]
 fn get() {
-    let client = Client::new();
+    let client = ClientBuilder::default();
     let url = random_url!();
     let mut f = std::io::empty();
     client.put(&mut f, url.clone()).unwrap();
